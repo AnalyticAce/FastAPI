@@ -44,11 +44,6 @@ class Mongo():
             "password": user["password"]
         }
 
-    # def create_db(self, db: str) -> None:
-    #     if db not in self.client.list_database_names():
-    #         self.client[db]
-    #         print(f"Database {db} created")
-
     async def create_db(self, db: str) -> None:
         if db not in await self.client.list_database_names():
             self.client[db]
@@ -60,11 +55,14 @@ class Mongo():
             print(f"Collection {collection} created")
 
     async def create_user(self, user: dict) -> dict:
-            result = self.collection.insert_one(user)
+            result = await self.collection.insert_one(user)
             return await self.collection.find_one({"_id": result.inserted_id})
 
     async def get_user_by_username(self, username: str) -> dict:
         return await self.collection.find_one({"username": username})
+
+    async def get_user_by_email(self, email: str):
+        return await self.collection.find_one({"email": email})
 
     async def update_user(self, username: str, data: dict) -> bool:
         if len(data) < 1:

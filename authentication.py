@@ -21,8 +21,10 @@ app = FastAPI(
 )
 
 mongodb = Mongo(MONGO_DB_NAME, MONGO_COLLECTION_NAME_USER)
-mongodb.create_db(MONGO_DB_NAME)
-mongodb.create_collection(MONGO_COLLECTION_NAME_USER)
+
+async def main():
+    await mongodb.create_db(MONGO_DB_NAME)
+    await mongodb.create_collection(MONGO_COLLECTION_NAME_USER)
 
 password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 auth_2_scheme = OAuth2PasswordBearer(tokenUrl="token")
