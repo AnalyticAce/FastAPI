@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 
 class LogoutResponse(BaseModel):
@@ -12,9 +12,14 @@ class TokenData(BaseModel):
     username: Optional[str | None] = None
 
 class User(BaseModel):
+    username: str = Field(..., example="johndoe")
+    email: EmailStr = Field(..., example="johndoe@gmail.com")
+    disabled: Optional[bool | None] = None
+
+class UserCreate(BaseModel):
     username: str
-    email: Optional[str | None] = None
-    full_name: Optional[str | None] = None
+    email: str
+    hashed_password: str
     disabled: Optional[bool | None] = None
 
 class UserInDB(User):

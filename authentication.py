@@ -7,49 +7,33 @@ from typing import Optional
 from models import (
     TokenData, UserInDB
 )
-
-from config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
-
-description = """
-**Project Name** API helps you do awesome stuff. 🚀
-
-## Items
-
-You can **read items**.
-
-## Users
-
-You will be able to:
-
-* **Create users**.
-* **Authenticate users**.
-* **Read users**.
-"""
+from mongo import Mongo
+from config import (
+    SECRET_KEY, ALGORITHM, 
+    ACCESS_TOKEN_EXPIRE_MINUTES, MONGO_DB_NAME, 
+    MONGO_COLLECTION_NAME_USER
+)
 
 app = FastAPI(
     title="Project Name",
-    # description=description,
     summary="This is a template for FastAPI with authentication logic using JWT",
     version="0.0.1",
-    contact={
-        "name": "AnalyticAce",
-        "url": "https://github.com/AnalyticAce",
-        "email": "dossehdosseh14@gmail.com",
-    },
-    license_info={
-        "name": "Apache 2.0",
-        "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
-    },
 )
 
-db = {
-    "johndoe": {
-        "username": "johndoe",
-        "email": "johndoe@gmail.com",
-        "hashed_password": "$2b$12$dLnumNcRwj2URbePTIOOWu7ngZbMXzDi5cUYa1KJkbUzaRvDUkLZ6", # pwd: 123456
-        "disabled": False,
-    }
-}
+mongodb = Mongo(MONGO_DB_NAME, MONGO_COLLECTION_NAME_USER)
+mongodb.create_db(MONGO_DB_NAME)
+mongodb.create_collection(MONGO_COLLECTION_NAME_USER)
+
+# db_old = {
+#     "johndoe": {
+#         "username": "johndoe",
+#         "email": "johndoe@gmail.com",
+#         "hashed_password": "$2b$12$dLnumNcRwj2URbePTIOOWu7ngZbMXzDi5cUYa1KJkbUzaRvDUkLZ6", # pwd: 123456
+#         "disabled": False,
+#     }
+# }
+
+db = mongodb.get_user_list()
 
 password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 auth_2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -79,9 +63,9 @@ def authenticate_user(db, username: str, password: str):
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
