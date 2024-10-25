@@ -6,3 +6,4 @@ pip install authlib --break-system-packages
 pip install itsdangerous --break-system-packages
 pip install motor==2.5.1 --break-system-packages
 pip install 'pydantic[email]' --break-system-packages
+pip install asyncio --break-system-packages
