@@ -121,8 +121,5 @@ async def get_current_active_user(current_user: UserInDB = Depends(get_current_u
     
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Invalid user")
-    
-    if current_user.token in revoked_tokens:
-        raise HTTPException(status_code=401, detail="Token is revoked")
 
     return current_user
