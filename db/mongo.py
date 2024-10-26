@@ -1,7 +1,7 @@
 import pymongo as mg
-from config import MONGO_CONNECTION_STRING
+from utils.config import MONGO_CONNECTION_STRING
 from bson.objectid import ObjectId
-from models import UserInDB
+from routers.models import UserInDB
 import motor.motor_asyncio
 
 class Mongo():
