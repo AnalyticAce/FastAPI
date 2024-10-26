@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 import httpx
-from utils.auth_utils import AuthUtils
+from utils.auth_utils import *
 from routers.models import Token, User, UserCreate
 from db.mongo import Mongo
 from utils.config import (
@@ -22,16 +22,21 @@ async def main():
     await mongodb.create_db(MONGO_DB_NAME)
     await mongodb.create_collection(MONGO_COLLECTION_NAME_USER)
 
-auth_utils = AuthUtils(mongodb)
-
 auth_router = APIRouter(
     prefix="/auth",
-    tags=["Authentication"]
+    tags=["Authentication"],
+        responses={
+        404: {"description": "Endpoint not found"},
+        403: {"description": "Forbidden access"},
+        200: {"description": "Success response"},
+        400: {"description": "Bad Request"},
+        401: {"description": "Unauthorized access"}
+    }
 )
 
 @auth_router.post("/token", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = await auth_utils.authenticate_user(form_data.username, form_data.password)
+    user = await authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -39,7 +44,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=int(ACCESS_TOKEN_EXPIRE_MINUTES))
-    access_token = auth_utils.create_access_token(
+    access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
@@ -60,7 +65,7 @@ async def register_user(user: UserCreate):
             detail="Email already registered"
         )
     
-    hashed_password = auth_utils.get_password_hash(user.password)
+    hashed_password = get_password_hash(user.password)
     user_data = {
         "username": user.username,
         "email": user.email,
@@ -127,6 +132,6 @@ if ACTIVATE_OAUTH2 and ACTIVATE_GITHUB:
             user = existing_user
 
         token_data = {"sub": user["username"]}
-        jwt_token = auth_utils.create_access_token(token_data)
+        jwt_token = create_access_token(token_data)
 
         return {"access_token": jwt_token, "token_type": "bearer"}
