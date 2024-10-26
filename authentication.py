@@ -8,6 +8,8 @@ from models import (
     TokenData, UserInDB
 )
 from mongo import Mongo
+from fastapi.middleware.cors import CORSMiddleware
+
 from config import (
     SECRET_KEY, ALGORITHM, 
     ACCESS_TOKEN_EXPIRE_MINUTES, MONGO_DB_NAME, 
@@ -18,6 +20,18 @@ app = FastAPI(
     title="Project Name",
     summary="This is a template for FastAPI with authentication logic using JWT",
     version="0.0.1",
+)
+
+origins = [
+    "127.0.0.1:8000/docs"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 mongodb = Mongo(MONGO_DB_NAME, MONGO_COLLECTION_NAME_USER)
@@ -48,7 +62,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     if expires_delta:
         expire = datetime.now() + expires_delta
     else:
-        expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now() + timedelta(minutes=int(ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt

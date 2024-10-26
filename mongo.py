@@ -25,7 +25,6 @@ class Mongo():
         return self.db[collection]
 
     async def get_user(self, username: str):
-        # user = await self.db[self.collection].find_one({"username": username})
         user = await self.collection.find_one({"username": username})
         if user:
             return UserInDB(
@@ -57,6 +56,13 @@ class Mongo():
     async def create_user(self, user: dict) -> dict:
             result = await self.collection.insert_one(user)
             return await self.collection.find_one({"_id": result.inserted_id})
+
+    async def get_me_id(self, username: str) -> str:
+        user = await self.collection.find_one({"username" : username})
+        return str(user["_id"])
+
+    async def get_user_by_github_id(self, github_id: int):
+        return await self.collection.find_one({"github_id": github_id})
 
     async def get_user_by_username(self, username: str) -> dict:
         return await self.collection.find_one({"username": username})

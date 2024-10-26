@@ -1,7 +1,7 @@
 import requests
 
-username = "mongo"
-email = "dossehdosseh14@gmail.com"
+username = "test"
+email = "shalom@gmail.com"
 password = "123456"
 
 url = "http://127.0.0.1:8000/register/"
