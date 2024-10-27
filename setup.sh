@@ -9,3 +9,5 @@ pip install 'pydantic[email]' --break-system-packages
 pip install asyncio --break-system-packages
 pip install httpx --break-system-packages
 pip install "fastapi[standard]" --break-system-packages
+pip install websockets --break-system-packages
+pip install slowapi --break-system-packages

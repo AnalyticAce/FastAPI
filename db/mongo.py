@@ -20,6 +20,8 @@ class Mongo():
             self.collection = self.db[self.collection_name]
         except mg.errors.ConnectionFailure as e:
             print(f"Connection error: {e}")
+        finally:
+            print("Connected to MongoDB")
 
     def _get_collection(self, collection: str):
         return self.db[collection]

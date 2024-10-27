@@ -1,31 +1,41 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 import httpx
-from utils.auth_utils import *
+from utils.auth_utils import (
+    mongodb,
+    authenticate_user,
+    create_access_token,
+    get_password_hash
+)
 from routers.models import Token, User, UserCreate
 from db.mongo import Mongo
+from routers.limiter import limiter
 from utils.config import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     GITHUB_CLIENT_ID,
     GITHUB_CLIENT_SECRET,
     ACTIVATE_OAUTH2,
     ACTIVATE_GITHUB, 
-    MONGO_DB_NAME, 
+    MONGO_DB_NAME,
     MONGO_COLLECTION_NAME_USER
 )
 
-mongodb = Mongo(MONGO_DB_NAME, MONGO_COLLECTION_NAME_USER)
+# mongodb = Mongo(MONGO_DB_NAME, MONGO_COLLECTION_NAME_USER)
 
-async def main():
-    await mongodb.create_db(MONGO_DB_NAME)
-    await mongodb.create_collection(MONGO_COLLECTION_NAME_USER)
+# async def main():
+#     """
+#     Initialize the MongoDB database and collection for user management.
+#     Creates the necessary database and collection if they don't exist.
+#     """
+#     await mongodb.create_db(MONGO_DB_NAME)
+#     await mongodb.create_collection(MONGO_COLLECTION_NAME_USER)
 
 auth_router = APIRouter(
     prefix="/auth",
     tags=["Authentication"],
-        responses={
+    responses={
         404: {"description": "Endpoint not found"},
         403: {"description": "Forbidden access"},
         200: {"description": "Success response"},
@@ -34,8 +44,21 @@ auth_router = APIRouter(
     }
 )
 
-@auth_router.post("/token", response_model=Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+@auth_router.post(
+    "/token",
+    response_model=Token,
+    summary="Login User",
+    description="Authenticates a user and provides a JWT access token for subsequent requests.",
+    response_description="Returns an access token and token type for authenticated user."
+)
+@limiter.limit('1/second')
+async def login(
+    request: Request,
+    form_data: OAuth2PasswordRequestForm = Depends()
+) -> Token:
+    """
+    Authenticate user and generate access token.
+    """
     user = await authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -49,8 +72,37 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
-@auth_router.post("/register", response_model=User)
-async def register_user(user: UserCreate):
+@auth_router.post(
+    "/logout",
+    summary="Logout User",
+    description="Invalidates the user's access token, effectively logging them out.",
+    response_description="Returns a message indicating successful logout."
+)
+@limiter.limit('1/second')
+async def logout(
+    request: Request
+) -> dict:
+    """
+    Invalidate the user's access token.
+    """
+    # possible implementation: let set access token to None
+    return {"message": "Successfully logged out"}
+
+@auth_router.post(
+    "/register",
+    response_model=User,
+    summary="Register New User",
+    description="Creates a new user account with the provided username, email, and password.",
+    response_description="Returns the created user's profile information (excluding password)."
+)
+@limiter.limit('1/second')
+async def register_user(
+    request: Request,
+    user: UserCreate
+) -> User:
+    """
+    Register a new user in the system.
+    """
     existing_user_by_username = await mongodb.get_user(user.username)
     if existing_user_by_username:
         raise HTTPException(
@@ -77,15 +129,36 @@ async def register_user(user: UserCreate):
     return User(username=user.username, email=user.email, disabled=False)
 
 if ACTIVATE_OAUTH2 and ACTIVATE_GITHUB:
-    @auth_router.get('/github-login')
-    async def github_login():
+    @auth_router.get(
+        '/github-login',
+        summary="GitHub OAuth Login",
+        description="Initiates the GitHub OAuth2 authentication flow by redirecting to GitHub's authorization page.",
+        response_description="Redirects user to GitHub's authorization page."
+    )
+    @limiter.limit('1/second')
+    async def github_login(request: Request) -> RedirectResponse:
+        """
+        Initiate GitHub OAuth login flow.
+        """
         return RedirectResponse(
             f'https://github.com/login/oauth/authorize?client_id={GITHUB_CLIENT_ID}', 
             status_code=302
         )
 
-    @auth_router.get('/github-code')
-    async def github_code(code: str):
+    @auth_router.get(
+        '/github-code',
+        summary="GitHub OAuth Callback",
+        description="Handles the GitHub OAuth2 callback, exchanges the code for an access token, and creates/updates user account.",
+        response_description="Returns a JWT access token for the authenticated GitHub user."
+    )
+    @limiter.limit('1/second')
+    async def github_code(
+        request: Request,
+        code: str
+    ) -> dict:
+        """
+        Handle GitHub OAuth callback and authenticate user.
+        """
         token_params = {
             'client_id': GITHUB_CLIENT_ID,
             'client_secret': GITHUB_CLIENT_SECRET,
@@ -113,14 +186,12 @@ if ACTIVATE_OAUTH2 and ACTIVATE_GITHUB:
             )
         github_user_data = user_response.json()
 
-        github_id = github_user_data.get("id")
         email = github_user_data.get("email")
         username = github_user_data.get("login")
 
-        existing_user = await mongodb.get_user_by_github_id(github_id)
+        existing_user = await mongodb.get_user_by_username(username)
         if not existing_user:
             new_user_data = {
-                "github_id": github_id,
                 "username": username,
                 "email": email,
                 "hashed_password": None,
