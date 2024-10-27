@@ -10,27 +10,14 @@ from utils.auth_utils import (
     get_password_hash
 )
 from routers.models import Token, User, UserCreate
-from db.mongo import Mongo
 from routers.limiter import limiter
 from utils.config import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     GITHUB_CLIENT_ID,
     GITHUB_CLIENT_SECRET,
     ACTIVATE_OAUTH2,
-    ACTIVATE_GITHUB, 
-    MONGO_DB_NAME,
-    MONGO_COLLECTION_NAME_USER
+    ACTIVATE_GITHUB,
 )
-
-# mongodb = Mongo(MONGO_DB_NAME, MONGO_COLLECTION_NAME_USER)
-
-# async def main():
-#     """
-#     Initialize the MongoDB database and collection for user management.
-#     Creates the necessary database and collection if they don't exist.
-#     """
-#     await mongodb.create_db(MONGO_DB_NAME)
-#     await mongodb.create_collection(MONGO_COLLECTION_NAME_USER)
 
 auth_router = APIRouter(
     prefix="/auth",
@@ -71,22 +58,6 @@ async def login(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
-
-@auth_router.post(
-    "/logout",
-    summary="Logout User",
-    description="Invalidates the user's access token, effectively logging them out.",
-    response_description="Returns a message indicating successful logout."
-)
-@limiter.limit('1/second')
-async def logout(
-    request: Request
-) -> dict:
-    """
-    Invalidate the user's access token.
-    """
-    # possible implementation: let set access token to None
-    return {"message": "Successfully logged out"}
 
 @auth_router.post(
     "/register",

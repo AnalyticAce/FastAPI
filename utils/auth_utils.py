@@ -27,7 +27,7 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return password_context.hash(password)
 
-async def authenticate_user(db, username: str, password: str):
+async def authenticate_user(username: str, password: str):
     user = await mongodb.get_user(username)
     if not user:
         return False
@@ -54,10 +54,10 @@ def decode_access_token(token: str):
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
-                                    status_code=status.HTTP_401_UNAUTHORIZED, 
-                                    detail="Could not validate credentials", 
-                                    headers={"WWW-Authenticate": "Bearer"}
-                                )
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="Could not validate credentials", 
+                headers={"WWW-Authenticate": "Bearer"}
+        )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
