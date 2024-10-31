@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers.auth import auth_router
-from routers.api import api_router
-from routers.health import app_health
+from routers.auth.auth import auth_router
+from routers.api.api import api_router
+from routers.other.health import app_health
 import uvicorn
 
 app = FastAPI(

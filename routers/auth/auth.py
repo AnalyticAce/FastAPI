@@ -21,7 +21,7 @@ from utils.config import (
 
 auth_router = APIRouter(
     prefix="/auth",
-    tags=["Authentication"],
+    tags=["Authentication / Identification"],
     responses={
         404: {"description": "Endpoint not found"},
         403: {"description": "Forbidden access"},

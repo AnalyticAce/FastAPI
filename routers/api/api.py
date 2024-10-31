@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from routers.models import User
-from routers.auth import mongodb
+from routers.auth.auth import mongodb
 from utils.auth_utils import *
 from routers.limiter import limiter
 
