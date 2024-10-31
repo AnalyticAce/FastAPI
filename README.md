@@ -13,5 +13,8 @@ ACTIVATE_GITHUB = "True"
 ACTIVATE_GOOGLE = "True"
 GITHUB_CLIENT_ID = "github_client_id"
 GITHUB_CLIENT_SECRET = "github_client_secret"
+```
 
+```bash
+sudo docker-compose up --build
 ```
