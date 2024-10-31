@@ -6,9 +6,9 @@ from routers.other.health import app_health, app_about
 import uvicorn
 
 app = FastAPI(
-    title="Project Name",
+    title="FastAPI JWT Template",
     summary="This is a template for FastAPI with authentication logic using JWT",
-    version="0.0.1",
+    version="1.0.0",
 )
 
 origins = [

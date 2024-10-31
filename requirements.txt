@@ -1,0 +1,13 @@
+uvicorn[standard]
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]
+authlib
+itsdangerous
+motor==3.6.0
+pydantic[email]
+asyncio
+httpx
+fastapi[standard]
+websockets
+slowapi
