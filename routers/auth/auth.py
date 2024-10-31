@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Security
 from fastapi.responses import RedirectResponse
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm, APIKeyHeader
 from datetime import timedelta
 import httpx
 from utils.auth_utils import (
@@ -31,6 +31,22 @@ auth_router = APIRouter(
     }
 )
 
+API_KEYS = [
+    "b63079cf984468d7ab1efaf1e5557a719b9f5eb05d88fd6abfa5d469e0a64e23",
+    "e08a686055f250932cba6aa53126ec9fd7d1d51f38012e37785573893dadadcc",
+    "197138fd0ab4af061a1a3d1044df7f10f2d93c7a1596c12695f1b73cc1afab68",
+]
+
+api_key_header = APIKeyHeader(name="X-API-KEY", auto_error=False)
+
+def get_api_key(api_key_header: str = Security(api_key_header)):
+    if api_key_header in API_KEYS:
+        return api_key_header
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Invalid or missing header key provided"
+    )
+
 @auth_router.post(
     "/token",
     response_model=Token,
@@ -41,7 +57,7 @@ auth_router = APIRouter(
 @limiter.limit('1/second')
 async def login(
     request: Request,
-    form_data: OAuth2PasswordRequestForm = Depends()
+    form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> Token:
     """
     Authenticate user and generate access token.
@@ -69,7 +85,7 @@ async def login(
 @limiter.limit('1/second')
 async def register_user(
     request: Request,
-    user: UserCreate
+    user: UserCreate,
 ) -> User:
     """
     Register a new user in the system.
@@ -93,7 +109,8 @@ async def register_user(
         "username": user.username,
         "email": user.email,
         "hashed_password": hashed_password,
-        "disabled": False
+        "disabled": False,
+        "is_superuser": False
     }
     
     result = await mongodb.create_user(user_data)
