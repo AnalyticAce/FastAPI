@@ -16,5 +16,6 @@ GITHUB_CLIENT_SECRET = "github_client_secret"
 ```
 
 ```bash
-sudo docker-compose up --build
+sudo docker build -t fastapiapp .
+sudo docker-compose up --build -d
 ```
