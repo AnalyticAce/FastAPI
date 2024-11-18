@@ -11,3 +11,4 @@ httpx
 fastapi[standard]
 websockets
 slowapi
+redis

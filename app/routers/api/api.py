@@ -1,8 +1,18 @@
+import json
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from routers.models import User
 from routers.auth.auth import mongodb
 from utils.auth_utils import *
 from routers.limiter import limiter
+from redis import Redis
+from utils.config import REDIS_HOST, REDIS_PORT
+
+async def get_redis() -> Redis:
+    redis = Redis(host=REDIS_HOST, port=REDIS_PORT)
+    try:
+        yield redis
+    finally:
+        redis.close()
 
 api_router = APIRouter(
     prefix="/api/v1",
@@ -26,7 +36,8 @@ api_router = APIRouter(
 @limiter.limit('5/second')
 async def read_users_me(
     request: Request,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
+    redis: Redis = Depends(get_redis)
 ) -> User:
     """
     Fetch details of the currently authenticated user.
@@ -41,7 +52,15 @@ async def read_users_me(
     Rate Limit:
         5 requests per second
     """
-    return current_user
+    value = redis.get(current_user.username)
+    
+    if value is None:
+        data = current_user.model_dump_json()
+        redis.set(current_user.username, json.dumps(data))
+        return current_user
+
+    cached_data = json.loads(value)
+    return User(**cached_data)
 
 @api_router.get(
     "/users/me/id",

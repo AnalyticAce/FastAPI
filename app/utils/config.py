@@ -43,7 +43,7 @@ if ACTIVATE_OAUTH2 == 'True':
     ACTIVATE_OAUTH2 = True
 elif ACTIVATE_OAUTH2 == 'False':
     ACTIVATE_OAUTH2 = False
-    
+
 ACTIVATE_GITHUB = os.environ.get('ACTIVATE_GITHUB')
 if ACTIVATE_GITHUB is None:
     raise ValueError('No ACTIVATE_GITHUB set for FastAPI application')
@@ -53,11 +53,19 @@ if ACTIVATE_GITHUB == 'True':
 elif ACTIVATE_GITHUB == 'False':
     ACTIVATE_GITHUB = False
     
-ACTIVATE_GOOGLE = os.environ.get('ACTIVATE_GOOGLE')
-if ACTIVATE_GOOGLE is None:
-    raise ValueError('No ACTIVATE_GOOGLE set for FastAPI application')
+ACTIVATE_MICROSOFT = os.environ.get('ACTIVATE_MICROSOFT')
+if ACTIVATE_MICROSOFT is None:
+    raise ValueError('No ACTIVATE_MICROSOFT set for FastAPI application')
 
-if ACTIVATE_GOOGLE == 'True':
-    ACTIVATE_GOOGLE = True
-elif ACTIVATE_GOOGLE == 'False':
-    ACTIVATE_GOOGLE = False
+if ACTIVATE_MICROSOFT == 'True':
+    ACTIVATE_MICROSOFT = True
+elif ACTIVATE_MICROSOFT == 'False':
+    ACTIVATE_MICROSOFT = False
+    
+REDIS_HOST = os.environ.get('REDIS_HOST')
+if REDIS_HOST is None:
+    raise ValueError('No REDIS_HOST set for FastAPI application')
+
+REDIS_PORT = os.environ.get('REDIS_PORT')
+if REDIS_PORT is None:
+    raise ValueError('No REDIS_PORT set for FastAPI application')

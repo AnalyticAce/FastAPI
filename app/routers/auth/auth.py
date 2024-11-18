@@ -17,6 +17,7 @@ from utils.config import (
     GITHUB_CLIENT_SECRET,
     ACTIVATE_OAUTH2,
     ACTIVATE_GITHUB,
+    ACTIVATE_MICROSOFT
 )
 
 auth_router = APIRouter(
@@ -194,3 +195,14 @@ if ACTIVATE_OAUTH2 and ACTIVATE_GITHUB:
         jwt_token = create_access_token(token_data)
 
         return {"access_token": jwt_token, "token_type": "bearer"}
+    
+if ACTIVATE_OAUTH2 and ACTIVATE_MICROSOFT:
+    @auth_router.get(
+        '/microsoft-login',
+        summary="Microsoft OAuth Login",
+        description="Initiates the Microsoft OAuth2 authentication flow by redirecting to Microsoft's authorization page.",
+        response_description="Redirects user to Microsoft's authorization page."
+    )
+    @limiter.limit('1/second')
+    def microsoft_login(request: Request) -> RedirectResponse:
+        pass
